@@ -90,7 +90,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 800px;
+      min-width: 900px;
     }
 
     th {
@@ -126,6 +126,20 @@
     .number {
       font-weight: bold;
       color: #071b3a;
+    }
+
+    .edit-button {
+      background: #d66a00;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .edit-button:hover {
+      background: #b95700;
     }
 
     .actions {
@@ -201,6 +215,7 @@
             <th>Role</th>
             <th>Post</th>
             <th>Duty</th>
+            <th>Action</th>
           </tr>
         </thead>
 
@@ -211,6 +226,7 @@
     </div>
 
     <div class="actions">
+
       <button class="back" onclick="goBack()">
         ← Back to Dashboard
       </button>
@@ -218,6 +234,7 @@
       <button class="logout" onclick="logout()">
         Logout
       </button>
+
     </div>
 
   </div>
@@ -320,7 +337,7 @@
     } =
       await supabaseClient
         .from('staff_profiles')
-        .select('name, role, post, duty')
+        .select('id, name, role, post, duty')
         .order('name', { ascending: true });
 
 
@@ -359,7 +376,9 @@
 
 
       row.innerHTML = `
-        <td class="number">${index + 1}</td>
+        <td class="number">
+          ${index + 1}
+        </td>
 
         <td>
           ${escapeHtml(member.name)}
@@ -377,6 +396,14 @@
 
         <td>
           ${escapeHtml(member.duty)}
+        </td>
+
+        <td>
+          <button
+            class="edit-button"
+            onclick="editStaff('${member.id}', '${escapeHtml(member.name)}')">
+            Edit
+          </button>
         </td>
       `;
 
@@ -406,6 +433,23 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+
+  }
+
+
+  /*
+    Temporary Edit function.
+    The actual editing form will be added next.
+  */
+
+  function editStaff(staffId, staffName) {
+
+    alert(
+      'Edit Staff\n\n' +
+      'Selected Staff: ' + staffName +
+      '\n\nStaff ID: ' + staffId +
+      '\n\nThe staff editing form will be added next.'
+    );
 
   }
 
