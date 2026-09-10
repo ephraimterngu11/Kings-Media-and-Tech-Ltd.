@@ -170,9 +170,10 @@
     <div class="dashboard-grid">
 
       <div class="card">
-        <h3>📊 Work Progress</h3>
-        <p>View and submit your work progress reports.</p>
-        <button>Work Progress</button>
+        <div class="card" id="staffManagementCard" style="display: none;">
+        <h3>👥 Staff Management</h3>
+        <p>View and manage KMT staff members, roles and duties.</p>
+        <button onclick="openStaffManagement()">Staff Management</button>
       </div>
 
       <div class="card">
@@ -301,8 +302,10 @@ console.error('Profile error:', profileError);
     */
 
     if (!profile.is_super_admin) {
-      document.getElementById('financeCard').style.display = 'none';
-    }
+  document.getElementById('financeCard').style.display = 'none';
+} else {
+  document.getElementById('staffManagementCard').style.display = 'block';
+}
 
 
     loading.style.display = 'none';
@@ -319,7 +322,10 @@ console.error('Profile error:', profileError);
       window.location.href = 'staff-login.html';
 
     });
-
+  
+function openStaffManagement() {
+  window.location.href = 'staff-management.html';
+}
 
   loadDashboard();
 
