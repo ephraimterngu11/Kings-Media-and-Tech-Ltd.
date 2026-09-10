@@ -518,16 +518,67 @@
     The actual editing form will be added next.
   */
 
-  function editStaff(staffId, staffName) {
+  async function editStaff(staffId) {
 
-    alert(
-      'Edit Staff\n\n' +
-      'Selected Staff: ' + staffName +
-      '\n\nStaff ID: ' + staffId +
-      '\n\nThe staff editing form will be added next.'
-    );
+  const editForm =
+    document.getElementById('editFormContainer');
 
+  const editMessage =
+    document.getElementById('editMessage');
+
+  editMessage.textContent = '';
+
+  const {
+    data: staff,
+    error
+  } = await supabaseClient
+    .from('staff_profiles')
+    .select('id, name, role, post, duty, tasks, lead_areas')
+    .eq('id', staffId)
+    .single();
+
+  if (error || !staff) {
+
+    editMessage.textContent =
+      'Unable to load staff information.';
+
+    editMessage.style.color = '#b00020';
+
+    return;
   }
+
+  document.getElementById('editStaffId').value =
+    staff.id;
+
+  document.getElementById('editName').value =
+    staff.name || '';
+
+  document.getElementById('editRole').value =
+    staff.role || '';
+
+  document.getElementById('editPost').value =
+    staff.post || '';
+
+  document.getElementById('editDuty').value =
+    staff.duty || '';
+
+  document.getElementById('editTasks').value =
+    Array.isArray(staff.tasks)
+      ? staff.tasks.join('\n')
+      : '';
+
+  document.getElementById('editLeadAreas').value =
+    Array.isArray(staff.lead_areas)
+      ? staff.lead_areas.join('\n')
+      : '';
+
+  editForm.style.display = 'block';
+
+  editForm.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+}
 
 
   function goBack() {
