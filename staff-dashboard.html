@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Staff Dashboard | King's Media & Tech Ltd.</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    header {
+      background: #071b3a;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 5px solid #d66a00;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #f0a04b;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .welcome {
+      background: white;
+      padding: 22px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .welcome h2 {
+      margin-top: 0;
+      color: #071b3a;
+    }
+
+    .role {
+      display: inline-block;
+      background: #d66a00;
+      color: white;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #071b3a;
+    }
+
+    .card p {
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .card button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 6px;
+      background: #071b3a;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .card button:hover {
+      background: #d66a00;
+    }
+
+    .logout {
+      margin-top: 25px;
+      text-align: center;
+    }
+
+    .logout button {
+      background: #b00020;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 40px;
+    }
+
+    #dashboard {
+      display: none;
+    }
+
+    #error {
+      display: none;
+      background: #ffe5e5;
+      color: #a00000;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>KING'S MEDIA & TECH LTD.</h1>
+  <p>Bridging the Tech Divide</p>
+</header>
+
+<div class="container">
+
+  <div id="loading">
+    Loading your staff profile...
+  </div>
+
+  <div id="error"></div>
+
+  <div id="dashboard">
+
+    <div class="welcome">
+      <h2>Welcome, <span id="staffName"></span></h2>
+      <p>
+        <strong>Post:</strong>
+        <span id="staffPost"></span>
+      </p>
+
+      <span class="role" id="staffRole"></span>
+    </div>
+
+    <div class="dashboard-grid">
+
+      <div class="card">
+        <h3>📊 Work Progress</h3>
+        <p>View and submit your work progress reports.</p>
+        <button>Work Progress</button>
+      </div>
+
+      <div class="card">
+        <h3>📚 Tutorials</h3>
+        <p>Post and manage tutorial materials, videos and lessons.</p>
+        <button>Tutorials</button>
+      </div>
+
+      <div class="card">
+        <h3>📝 Reports</h3>
+        <p>Submit and manage your staff reports.</p>
+        <button>Staff Reports</button>
+      </div>
+
+      <div class="card">
+        <h3>📢 Activities</h3>
+        <p>View and manage assigned activities.</p>
+        <button>Activities</button>
+      </div>
+
+      <div class="card">
+        <h3>🔔 Notifications</h3>
+        <p>View important announcements and staff notifications.</p>
+        <button>Notifications</button>
+      </div>
+
+      <div class="card" id="financeCard">
+        <h3>💰 Financial Reports</h3>
+        <p>Access confidential financial information and reports.</p>
+        <button>Financial Reports</button>
+      </div>
+
+    </div>
+
+    <div class="logout">
+      <button id="logoutButton">Logout</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+  const SUPABASE_URL = 'https://pcvjtkctxfgsynportqr.supabase.co';
+
+  const SUPABASE_KEY =
+    'sb_publishable_noW8Cu33b3m48nbWeNKTxw_u037wFxQ';
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+  async function loadDashboard() {
+
+    const loading = document.getElementById('loading');
+    const errorBox = document.getElementById('error');
+    const dashboard = document.getElementById('dashboard');
+
+    const {
+      data: { user },
+      error: userError
+    } = await supabaseClient.auth.getUser();
+
+
+    if (userError || !user) {
+
+      loading.style.display = 'none';
+
+      errorBox.style.display = 'block';
+
+      errorBox.textContent =
+        'You are not logged in. Please return to the Staff Login page.';
+
+      setTimeout(function() {
+        window.location.href = 'staff-login.html';
+      }, 2500);
+
+      return;
+    }
+
+
+    const {
+      data: profile,
+      error: profileError
+    } = await supabaseClient
+      .from('staff_profiles')
+      .select('name, role, post, duty, is_super_admin')
+      .eq('id', user.id)
+      .single();
+
+
+    if (profileError || !profile) {
+
+      loading.style.display = 'none';
+
+      errorBox.style.display = 'block';
+
+      errorBox.textContent =
+        'Your staff profile could not be loaded. Please contact the Chief Admin.';
+
+      console.error(profileError);
+
+      return;
+    }
+
+
+    document.getElementById('staffName').textContent =
+      profile.name;
+
+    document.getElementById('staffPost').textContent =
+      profile.post;
+
+    document.getElementById('staffRole').textContent =
+      profile.role;
+
+
+    /*
+      Financial information is currently visible only
+      to the Chief Admin.
+
+      We will later replace this simple interface rule
+      with proper database-level authorization.
+    */
+
+    if (!profile.is_super_admin) {
+      document.getElementById('financeCard').style.display = 'none';
+    }
+
+
+    loading.style.display = 'none';
+
+    dashboard.style.display = 'block';
+  }
+
+
+  document.getElementById('logoutButton')
+    .addEventListener('click', async function() {
+
+      await supabaseClient.auth.signOut();
+
+      window.location.href = 'staff-login.html';
+
+    });
+
+
+  loadDashboard();
+
+</script>
+
+</body>
+</html>
