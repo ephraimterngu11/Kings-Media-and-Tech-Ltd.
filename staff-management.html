@@ -225,6 +225,82 @@
 
     </div>
 
+    <div id="editFormContainer" style="display: none; background: white; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+
+  <h3 style="color: #071b3a; margin-top: 0;">
+    Edit Staff Member
+  </h3>
+
+  <input type="hidden" id="editStaffId">
+
+  <label>Name</label>
+  <input
+    type="text"
+    id="editName"
+    style="width: 100%; padding: 11px; margin: 6px 0 15px; border: 1px solid #ccc; border-radius: 6px;"
+  >
+
+  <label>Role</label>
+  <input
+    type="text"
+    id="editRole"
+    style="width: 100%; padding: 11px; margin: 6px 0 15px; border: 1px solid #ccc; border-radius: 6px;"
+  >
+
+  <label>Post</label>
+  <input
+    type="text"
+    id="editPost"
+    style="width: 100%; padding: 11px; margin: 6px 0 15px; border: 1px solid #ccc; border-radius: 6px;"
+  >
+
+  <label>Duty</label>
+  <textarea
+    id="editDuty"
+    rows="4"
+    style="width: 100%; padding: 11px; margin: 6px 0 15px; border: 1px solid #ccc; border-radius: 6px;"
+  ></textarea>
+
+  <label>Tasks</label>
+  <textarea
+    id="editTasks"
+    rows="5"
+    placeholder="Enter tasks, one per line"
+    style="width: 100%; padding: 11px; margin: 6px 0 15px; border: 1px solid #ccc; border-radius: 6px;"
+  ></textarea>
+
+  <label>Lead Areas</label>
+  <textarea
+    id="editLeadAreas"
+    rows="5"
+    placeholder="Enter lead areas, one per line"
+    style="width: 100%; padding: 11px; margin: 6px 0 15px; border: 1px solid #ccc; border-radius: 6px;"
+  ></textarea>
+
+  <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+
+    <button
+      type="button"
+      onclick="saveStaffChanges()"
+      style="background: #071b3a; color: white;">
+      Save Changes
+    </button>
+
+    <button
+      type="button"
+      onclick="cancelEdit()"
+      style="background: #777; color: white;">
+      Cancel
+    </button>
+
+  </div>
+
+  <div
+    id="editMessage"
+    style="margin-top: 15px; font-weight: bold;">
+  </div>
+
+</div>
     <div class="actions">
 
       <button class="back" onclick="goBack()">
