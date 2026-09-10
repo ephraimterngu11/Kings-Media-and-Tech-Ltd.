@@ -115,6 +115,20 @@
   <footer>
     <p>© 2026 King's Media & Tech Ltd. All Rights Reserved.</p>
   </footer>
+  
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+  const SUPABASE_URL = 'https://pcvjtkctxfgsynportqr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_noW8Cu33b3m48nbWeNKTxw_u037wFxQ';
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  console.log('Supabase connected successfully');
+</script>
+  
 </body>
 </html>
