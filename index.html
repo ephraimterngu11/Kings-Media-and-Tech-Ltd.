@@ -128,6 +128,21 @@
   );
 
   console.log('Supabase connected successfully');
+    async function testSupabase() {
+  const { data, error } = await supabaseClient
+    .from('staff_profiles')
+    .select('name, role')
+    .limit(8);
+
+  if (error) {
+    console.error('Supabase test failed:', error);
+    return;
+  }
+
+  console.log('Supabase test successful:', data);
+}
+
+testSupabase();
 </script>
   
 </body>
