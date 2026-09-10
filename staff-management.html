@@ -514,72 +514,205 @@
 
 
   /*
-    Temporary Edit function.
-    The actual editing form will be added next.
+    Load the selected staff member into
+    the editing form.
   */
 
   async function editStaff(staffId) {
 
-  const editForm =
-    document.getElementById('editFormContainer');
+    const editForm =
+      document.getElementById('editFormContainer');
 
-  const editMessage =
-    document.getElementById('editMessage');
+    const editMessage =
+      document.getElementById('editMessage');
 
-  editMessage.textContent = '';
+    editMessage.textContent = '';
 
-  const {
-    data: staff,
-    error
-  } = await supabaseClient
-    .from('staff_profiles')
-    .select('id, name, role, post, duty, tasks, lead_areas')
-    .eq('id', staffId)
-    .single();
+    const {
+      data: staff,
+      error
+    } = await supabaseClient
+      .from('staff_profiles')
+      .select('id, name, role, post, duty, tasks, lead_areas')
+      .eq('id', staffId)
+      .single();
 
-  if (error || !staff) {
+    if (error || !staff) {
 
-    editMessage.textContent =
-      'Unable to load staff information.';
+      editMessage.textContent =
+        'Unable to load staff information.';
 
-    editMessage.style.color = '#b00020';
+      editMessage.style.color = '#b00020';
 
-    return;
+      return;
+    }
+
+    document.getElementById('editStaffId').value =
+      staff.id;
+
+    document.getElementById('editName').value =
+      staff.name || '';
+
+    document.getElementById('editRole').value =
+      staff.role || '';
+
+    document.getElementById('editPost').value =
+      staff.post || '';
+
+    document.getElementById('editDuty').value =
+      staff.duty || '';
+
+    document.getElementById('editTasks').value =
+      Array.isArray(staff.tasks)
+        ? staff.tasks.join('\n')
+        : '';
+
+    document.getElementById('editLeadAreas').value =
+      Array.isArray(staff.lead_areas)
+        ? staff.lead_areas.join('\n')
+        : '';
+
+    editForm.style.display = 'block';
+
+    editForm.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   }
 
-  document.getElementById('editStaffId').value =
-    staff.id;
 
-  document.getElementById('editName').value =
-    staff.name || '';
+  /*
+    Save edited staff information
+    to Supabase.
+  */
 
-  document.getElementById('editRole').value =
-    staff.role || '';
+  async function saveStaffChanges() {
 
-  document.getElementById('editPost').value =
-    staff.post || '';
+    const staffId =
+      document.getElementById('editStaffId').value;
 
-  document.getElementById('editDuty').value =
-    staff.duty || '';
+    const name =
+      document.getElementById('editName').value.trim();
 
-  document.getElementById('editTasks').value =
-    Array.isArray(staff.tasks)
-      ? staff.tasks.join('\n')
-      : '';
+    const role =
+      document.getElementById('editRole').value.trim();
 
-  document.getElementById('editLeadAreas').value =
-    Array.isArray(staff.lead_areas)
-      ? staff.lead_areas.join('\n')
-      : '';
+    const post =
+      document.getElementById('editPost').value.trim();
 
-  editForm.style.display = 'block';
+    const duty =
+      document.getElementById('editDuty').value.trim();
 
-  editForm.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start'
-  });
-}
+    const tasks =
+      document.getElementById('editTasks').value
+        .split('\n')
+        .map(function(item) {
+          return item.trim();
+        })
+        .filter(function(item) {
+          return item !== '';
+        });
 
+    const leadAreas =
+      document.getElementById('editLeadAreas').value
+        .split('\n')
+        .map(function(item) {
+          return item.trim();
+        })
+        .filter(function(item) {
+          return item !== '';
+        });
+
+    const editMessage =
+      document.getElementById('editMessage');
+
+
+    if (!staffId) {
+
+      editMessage.textContent =
+        'No staff member selected.';
+
+      editMessage.style.color = '#b00020';
+
+      return;
+    }
+
+
+    if (!name || !role || !post || !duty) {
+
+      editMessage.textContent =
+        'Please complete Name, Role, Post and Duty.';
+
+      editMessage.style.color = '#b00020';
+
+      return;
+    }
+
+
+    editMessage.textContent =
+      'Saving changes...';
+
+    editMessage.style.color = '#071b3a';
+
+
+    const { error } =
+      await supabaseClient
+        .from('staff_profiles')
+        .update({
+          name: name,
+          role: role,
+          post: post,
+          duty: duty,
+          tasks: tasks,
+          lead_areas: leadAreas,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', staffId);
+
+
+    if (error) {
+
+      editMessage.textContent =
+        'Unable to save changes: ' +
+        error.message;
+
+      editMessage.style.color = '#b00020';
+
+      console.error(error);
+
+      return;
+    }
+
+
+    editMessage.textContent =
+      'Staff information updated successfully.';
+
+    editMessage.style.color = 'green';
+
+
+    setTimeout(function() {
+
+      document.getElementById('editFormContainer').style.display =
+        'none';
+
+      loadStaffManagement();
+
+    }, 1200);
+  }
+
+
+  /*
+    Cancel editing and hide the form.
+  */
+
+  function cancelEdit() {
+
+    document.getElementById('editFormContainer').style.display =
+      'none';
+
+    document.getElementById('editMessage').textContent = '';
+
+  }
 
   function goBack() {
 
