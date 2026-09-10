@@ -274,9 +274,9 @@
       errorBox.style.display = 'block';
 
       errorBox.textContent =
-        'Your staff profile could not be loaded. Please contact the Chief Admin.';
+      'Profile error: ' + (profileError?.message || 'Unknown error');
 
-      console.error(profileError);
+      console.error('Profile error:', profileError);
 
       return;
     }
