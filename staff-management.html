@@ -142,6 +142,18 @@
       background: #b95700;
     }
 
+    .status-button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.status-button:hover {
+  opacity: 0.85;
+}
+    
     .actions {
       margin-top: 20px;
       display: flex;
@@ -491,11 +503,24 @@
 </td>
 
 <td>
+
   <button
     class="edit-button"
     onclick="editStaff('${member.id}', '${escapeHtml(member.name)}')">
     Edit
   </button>
+
+  <button
+    class="status-button"
+    style="
+      margin-top: 6px;
+      background: ${member.is_active ? '#b00020' : '#187a35'};
+      color: white;
+    "
+    onclick="toggleStaffStatus('${member.id}', ${member.is_active})">
+    ${member.is_active ? 'Deactivate' : 'Activate'}
+  </button>
+
 </td>
       `;
 
@@ -716,7 +741,79 @@
     }, 1200);
   }
 
+/*
+  Activate or deactivate a staff member.
+  Only the Chief Admin can perform this action.
+*/
 
+async function toggleStaffStatus(staffId, currentStatus) {
+
+  const action =
+    currentStatus ? 'deactivate' : 'activate';
+
+  const confirmation = confirm(
+    'Are you sure you want to ' +
+    action +
+    ' this staff member?'
+  );
+
+  if (!confirmation) {
+    return;
+  }
+
+
+  /*
+    Prevent the Chief Admin from accidentally
+    deactivating their own account.
+  */
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+
+  if (user && user.id === staffId && currentStatus) {
+
+    alert(
+      'The Chief Admin account cannot be deactivated from Staff Management.'
+    );
+
+    return;
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from('staff_profiles')
+      .update({
+        is_active: !currentStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', staffId);
+
+
+  if (error) {
+
+    alert(
+      'Unable to change staff status: ' +
+      error.message
+    );
+
+    console.error(error);
+
+    return;
+  }
+
+
+  alert(
+    'Staff member has been ' +
+    (currentStatus ? 'deactivated.' : 'activated.')
+  );
+
+
+  loadStaffManagement();
+}
+  
   /*
     Cancel editing and hide the form.
   */
