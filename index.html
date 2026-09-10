@@ -140,6 +140,10 @@
   }
 
   console.log('Supabase test successful:', data);
+      document.body.insertAdjacentHTML(
+  'beforeend',
+  '<div style="padding:20px;text-align:center;background:#e8f5e9;color:#155724;font-weight:bold;">Supabase connection is working!</div>'
+);
 }
 
 testSupabase();
