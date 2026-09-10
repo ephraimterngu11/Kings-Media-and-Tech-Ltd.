@@ -1,1 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Staff Management | King's Media & Tech Ltd.</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    header {
+      background: #071b3a;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 5px solid #d66a00;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #f0a04b;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .page-title {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .page-title h2 {
+      margin: 0 0 8px;
+      color: #071b3a;
+    }
+
+    .page-title p {
+      margin: 0;
+      color: #666;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 40px;
+    }
+
+    #error {
+      display: none;
+      background: #ffe5e5;
+      color: #a00000;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    #content {
+      display: none;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    th {
+      background: #071b3a;
+      color: white;
+      padding: 13px;
+      text-align: left;
+    }
+
+    td {
+      padding: 13px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+      background: #f7f7f7;
+    }
+
+    .role {
+      display: inline-block;
+      background: #d66a00;
+      color: white;
+      padding: 5px 9px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .admin {
+      background: #071b3a;
+    }
+
+    .number {
+      font-weight: bold;
+      color: #071b3a;
+    }
+
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      padding: 11px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .back {
+      background: #071b3a;
+      color: white;
+    }
+
+    .logout {
+      background: #b00020;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.88;
+    }
+
+    .count {
+      margin-bottom: 15px;
+      color: #555;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>KING'S MEDIA & TECH LTD.</h1>
+  <p>Bridging the Tech Divide</p>
+</header>
+
+<div class="container">
+
+  <div id="loading">
+    Checking Chief Admin access...
+  </div>
+
+  <div id="error"></div>
+
+  <div id="content">
+
+    <div class="page-title">
+      <h2>Staff Management</h2>
+      <p>View the registered KMT staff members and their assigned roles.</p>
+    </div>
+
+    <div class="count">
+      Total Staff: <span id="staffCount">0</span>
+    </div>
+
+    <div class="table-container">
+
+      <table>
+        <thead>
+          <tr>
+            <th>S/N</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Post</th>
+            <th>Duty</th>
+          </tr>
+        </thead>
+
+        <tbody id="staffTable">
+        </tbody>
+      </table>
+
+    </div>
+
+    <div class="actions">
+      <button class="back" onclick="goBack()">
+        ← Back to Dashboard
+      </button>
+
+      <button class="logout" onclick="logout()">
+        Logout
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+  const SUPABASE_URL =
+    'https://pcvjtkctxfgsynportqr.supabase.co';
+
+  const SUPABASE_KEY =
+    'sb_publishable_noW8Cu33b3m48nbWeNKTxw_u037wFxQ';
+
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+  async function loadStaffManagement() {
+
+    const loading =
+      document.getElementById('loading');
+
+    const errorBox =
+      document.getElementById('error');
+
+    const content =
+      document.getElementById('content');
+
+
+    const {
+      data: { user },
+      error: userError
+    } =
+      await supabaseClient.auth.getUser();
+
+
+    if (userError || !user) {
+
+      loading.style.display = 'none';
+
+      errorBox.style.display = 'block';
+
+      errorBox.textContent =
+        'You must be logged in to access Staff Management.';
+
+      setTimeout(function() {
+        window.location.href = 'staff-login.html';
+      }, 2500);
+
+      return;
+    }
+
+
+    /*
+      Verify that the logged-in user is
+      actually the Chief Admin.
+    */
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await supabaseClient
+        .from('staff_profiles')
+        .select('name, role, is_super_admin')
+        .eq('id', user.id)
+        .single();
+
+
+    if (
+      profileError ||
+      !profile ||
+      profile.is_super_admin !== true
+    ) {
+
+      loading.style.display = 'none';
+
+      errorBox.style.display = 'block';
+
+      errorBox.textContent =
+        'Access denied. Staff Management is restricted to the Chief Admin.';
+
+      return;
+    }
+
+
+    /*
+      Load staff profiles.
+      The RLS policy allows the Chief Admin
+      to view all staff profiles.
+    */
+
+    const {
+      data: staff,
+      error: staffError
+    } =
+      await supabaseClient
+        .from('staff_profiles')
+        .select('name, role, post, duty')
+        .order('name', { ascending: true });
+
+
+    if (staffError) {
+
+      loading.style.display = 'none';
+
+      errorBox.style.display = 'block';
+
+      errorBox.textContent =
+        'Unable to load staff records: ' +
+        staffError.message;
+
+      console.error(staffError);
+
+      return;
+    }
+
+
+    const table =
+      document.getElementById('staffTable');
+
+    table.innerHTML = '';
+
+
+    staff.forEach(function(member, index) {
+
+      const row =
+        document.createElement('tr');
+
+      const roleClass =
+        member.role &&
+        member.role.toLowerCase().includes('admin')
+          ? 'role admin'
+          : 'role';
+
+
+      row.innerHTML = `
+        <td class="number">${index + 1}</td>
+
+        <td>
+          ${escapeHtml(member.name)}
+        </td>
+
+        <td>
+          <span class="${roleClass}">
+            ${escapeHtml(member.role)}
+          </span>
+        </td>
+
+        <td>
+          ${escapeHtml(member.post)}
+        </td>
+
+        <td>
+          ${escapeHtml(member.duty)}
+        </td>
+      `;
+
+
+      table.appendChild(row);
+
+    });
+
+
+    document.getElementById('staffCount').textContent =
+      staff.length;
+
+
+    loading.style.display = 'none';
+
+    content.style.display = 'block';
+  }
+
+
+  function escapeHtml(value) {
+
+    if (!value) return '';
+
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  }
+
+
+  function goBack() {
+
+    window.location.href =
+      'staff-dashboard.html';
+
+  }
+
+
+  async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    window.location.href =
+      'staff-login.html';
+
+  }
+
+
+  loadStaffManagement();
+
+</script>
+
+</body>
+</html>
