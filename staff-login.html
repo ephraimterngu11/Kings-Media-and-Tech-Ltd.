@@ -204,10 +204,10 @@
       return;
     }
 
-    message.textContent = 'Login successful!';
+    message.textContent = 'Login successful! Redirecting...';
     message.style.color = 'green';
 
-    console.log('Logged in user:', data.user);
+    window.location.href = 'staff-dashboard.html';
   });
 </script>
   
