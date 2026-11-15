@@ -153,7 +153,20 @@
 .status-button:hover {
   opacity: 0.85;
 }
-    
+    .password-button {
+  margin-top: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  background: #071b3a;
+  color: white;
+}
+
+.password-button:hover {
+  background: #d66a00;
+}
     .actions {
       margin-top: 20px;
       display: flex;
@@ -305,7 +318,98 @@
       style="background: #777; color: white;">
       Cancel
     </button>
+<div
+  id="passwordResetContainer"
+  style="
+    display: none;
+    margin-top: 25px;
+    padding: 20px;
+    background: #f4f6f9;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+  "
+>
 
+  <h3 style="color: #071b3a;">
+    🔐 Reset Staff Password
+  </h3>
+
+  <p>
+    Resetting password for:
+    <strong id="resetStaffName"></strong>
+  </p>
+
+  <input
+    type="hidden"
+    id="resetStaffId"
+  >
+
+  <label for="newStaffPassword">
+    New Password
+  </label>
+
+  <input
+    type="password"
+    id="newStaffPassword"
+    placeholder="Enter new password"
+    minlength="8"
+  >
+
+  <label for="confirmStaffPassword">
+    Confirm New Password
+  </label>
+
+  <input
+    type="password"
+    id="confirmStaffPassword"
+    placeholder="Re-enter new password"
+    minlength="8"
+  >
+
+  <div
+    id="passwordResetMessage"
+    style="
+      margin-top: 10px;
+      font-weight: bold;
+    "
+  ></div>
+
+  <button
+    type="button"
+    onclick="resetStaffPassword()"
+    style="
+      margin-top: 12px;
+      background: #071b3a;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    "
+  >
+    Reset Password
+  </button>
+
+  <button
+    type="button"
+    onclick="cancelPasswordReset()"
+    style="
+      margin-top: 12px;
+      margin-left: 8px;
+      background: #777;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    "
+  >
+    Cancel
+  </button>
+
+</div>
   </div>
 
   <div
@@ -612,6 +716,12 @@
     "
     onclick="toggleStaffStatus('${member.id}', ${member.is_active})">
     ${member.is_active ? 'Deactivate' : 'Activate'}
+  </button>
+
+  <button
+    class="password-button"
+    onclick="openPasswordReset('${member.id}')">
+    Reset Password
   </button>
 
 </td>
@@ -1169,7 +1279,263 @@ function cancelPasswordReset() {
   ).value = '';
 
 }
+function openPasswordReset(staffId) {
 
+  const staffRow =
+    document.querySelector(
+      `button[onclick*="${staffId}"]`
+    );
+
+  let staffName = 'Selected Staff Member';
+
+  if (staffRow) {
+    const row =
+      staffRow.closest('tr');
+
+    if (row) {
+      const nameCell =
+        row.querySelector('td:nth-child(2)');
+
+      if (nameCell) {
+        staffName =
+          nameCell.textContent.trim();
+      }
+    }
+  }
+
+
+  document.getElementById(
+    'resetStaffId'
+  ).value = staffId;
+
+
+  document.getElementById(
+    'resetStaffName'
+  ).textContent = staffName;
+
+
+  document.getElementById(
+    'newStaffPassword'
+  ).value = '';
+
+
+  document.getElementById(
+    'confirmStaffPassword'
+  ).value = '';
+
+
+  document.getElementById(
+    'passwordResetMessage'
+  ).textContent = '';
+
+
+  document.getElementById(
+    'passwordResetContainer'
+  ).style.display = 'block';
+
+
+  document.getElementById(
+    'passwordResetContainer'
+  ).scrollIntoView({
+    behavior: 'smooth',
+    block: 'center'
+  });
+
+}
+  async function resetStaffPassword() {
+
+  const staffId =
+    document.getElementById(
+      'resetStaffId'
+    ).value;
+
+
+  const newPassword =
+    document.getElementById(
+      'newStaffPassword'
+    ).value;
+
+
+  const confirmPassword =
+    document.getElementById(
+      'confirmStaffPassword'
+    ).value;
+
+
+  const message =
+    document.getElementById(
+      'passwordResetMessage'
+    );
+
+
+  if (!staffId) {
+
+    message.textContent =
+      'No staff member selected.';
+
+    message.style.color =
+      '#b00020';
+
+    return;
+  }
+
+
+  if (!newPassword) {
+
+    message.textContent =
+      'Please enter a new password.';
+
+    message.style.color =
+      '#b00020';
+
+    return;
+  }
+
+
+  if (newPassword.length < 8) {
+
+    message.textContent =
+      'Password must contain at least 8 characters.';
+
+    message.style.color =
+      '#b00020';
+
+    return;
+  }
+
+
+  if (newPassword !== confirmPassword) {
+
+    message.textContent =
+      'The passwords do not match.';
+
+    message.style.color =
+      '#b00020';
+
+    return;
+  }
+
+
+  const confirmed =
+    confirm(
+      'Are you sure you want to reset this staff member\'s password?'
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  message.textContent =
+    'Resetting password...';
+
+  message.style.color =
+    '#071b3a';
+
+
+  const {
+    data: sessionData,
+    error: sessionError
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (
+    sessionError ||
+    !sessionData.session
+  ) {
+
+    message.textContent =
+      'Your session has expired. Please log in again.';
+
+    message.style.color =
+      '#b00020';
+
+    return;
+  }
+
+
+  const response =
+    await fetch(
+      SUPABASE_URL +
+      '/functions/v1/reset-staff-password',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+
+          'Authorization':
+            'Bearer ' +
+            sessionData.session.access_token
+        },
+
+        body: JSON.stringify({
+          staffId: staffId,
+          newPassword: newPassword
+        })
+      }
+    );
+
+
+  const result =
+    await response.json();
+
+
+  if (!response.ok) {
+
+    message.textContent =
+      result.error ||
+      'Unable to reset password.';
+
+    message.style.color =
+      '#b00020';
+
+    return;
+  }
+
+
+  message.textContent =
+    result.message ||
+    'Password reset successfully.';
+
+  message.style.color =
+    'green';
+
+
+  document.getElementById(
+    'newStaffPassword'
+  ).value = '';
+
+
+  document.getElementById(
+    'confirmStaffPassword'
+  ).value = '';
+
+}
+  function cancelPasswordReset() {
+
+  document.getElementById(
+    'passwordResetContainer'
+  ).style.display = 'none';
+
+
+  document.getElementById(
+    'passwordResetMessage'
+  ).textContent = '';
+
+
+  document.getElementById(
+    'newStaffPassword'
+  ).value = '';
+
+
+  document.getElementById(
+    'confirmStaffPassword'
+  ).value = '';
+
+}
   
 function cancelEdit() {
 
