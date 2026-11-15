@@ -196,6 +196,38 @@
         SUPABASE_KEY
       );
 
+async function forgotPassword() {
+
+  const email = document.getElementById('email').value.trim();
+  const message = document.getElementById('message');
+
+  if (!email) {
+    message.style.color = '#b00020';
+    message.textContent =
+      'Please enter your registered email address first.';
+    document.getElementById('email').focus();
+    return;
+  }
+
+  message.style.color = '#071b3a';
+  message.textContent = 'Sending recovery email...';
+
+  const { error } =
+    await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://ephraimterngu11.github.io/Kings-Media-and-Tech-Ltd./reset-password.html'
+    });
+
+  if (error) {
+    message.style.color = '#b00020';
+    message.textContent = error.message;
+    return;
+  }
+
+  message.style.color = '#187a35';
+  message.textContent =
+    'If this email is registered, a password recovery link will be sent. Please check your inbox and spam folder.';
+}
+
 
     /*
       LOGIN
