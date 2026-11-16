@@ -773,6 +773,21 @@
     ${member.is_active ? 'Deactivate' : 'Activate'}
   </button>
 
+<button
+  class="delete-button"
+  style="
+    margin-top:6px;
+    background:#8b0000;
+    color:white;
+    padding:8px 12px;
+    border:0;
+    border-radius:5px;
+    cursor:pointer;
+  "
+  onclick="deleteStaffAccount('${member.id}')">
+  Delete Account
+</button>
+
   <button
     class="password-button"
     onclick="openPasswordReset('${member.id}')">
@@ -1823,6 +1838,66 @@ loadRegistrationRequests();
     console.log("Access token exists:", !!data.session?.access_token);
     console.log("Session error:", error?.message || "None");
 })();
+
+async function deleteStaffAccount(staffId) {
+    try {
+        // Retrieve the staff member's name for confirmation.
+        const { data: staff, error: staffError } = await supabaseClient
+            .from('staff_profiles')
+            .select('id, name, is_super_admin')
+            .eq('id', staffId)
+            .single();
+
+        if (staffError) throw staffError;
+
+        if (staff.is_super_admin) {
+            alert('Privileged administrator accounts cannot be deleted.');
+            return;
+        }
+
+        const confirmation = prompt(
+            'PERMANENT ACCOUNT DELETION\n\n' +
+            'Staff member: ' + staff.name + '\n\n' +
+            'This will permanently delete their login account and staff profile.\n\n' +
+            'Type DELETE to confirm:'
+        );
+
+        if (confirmation !== 'DELETE') {
+            alert('Deletion cancelled.');
+            return;
+        }
+
+        const { data, error } = await supabaseClient.functions.invoke(
+            'delete-staff-account',
+            {
+                body: { staffId: staffId }
+            }
+        );
+
+        if (error) {
+            let message = error.message;
+
+            try {
+                const response = await error.context.json();
+                message = response.error || message;
+            } catch (e) {}
+
+            throw new Error(message);
+        }
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        alert(data.message || 'Staff account deleted successfully.');
+
+        await loadStaff();
+
+    } catch (error) {
+        console.error('Staff deletion error:', error);
+        alert('Deletion failed: ' + error.message);
+    }
+}
 
 </script>
 
