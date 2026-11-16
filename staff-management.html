@@ -223,6 +223,61 @@
 
     <div class="page-title">
       <h2>Staff Management</h2>
+      
+<!-- STAFF REGISTRATION APPROVAL CENTRE -->
+
+<div id="registrationApprovalSection"
+     style="margin:25px 0; padding:20px;
+     background:#fff; border:1px solid #ddd;
+     border-radius:10px;">
+
+  <h2 style="color:#071b3a;">
+    📋 Staff Registration Requests
+  </h2>
+
+  <p style="color:#666;">
+    Review new staff applications and approve or reject
+    registration requests.
+  </p>
+
+  <button onclick="loadRegistrationRequests()"
+          style="background:#071b3a; color:white;
+          padding:10px 16px; border:0;
+          border-radius:6px; cursor:pointer;">
+    Refresh Applications
+  </button>
+
+  <p id="registrationRequestMessage"></p>
+
+  <div style="overflow-x:auto;">
+
+    <table style="width:100%; border-collapse:collapse;
+                  margin-top:15px;">
+
+      <thead>
+        <tr style="background:#071b3a; color:white;">
+          <th style="padding:10px;">Applicant</th>
+          <th style="padding:10px;">Email</th>
+          <th style="padding:10px;">Phone</th>
+          <th style="padding:10px;">Date</th>
+          <th style="padding:10px;">Action</th>
+        </tr>
+      </thead>
+
+      <tbody id="registrationRequestsBody">
+        <tr>
+          <td colspan="5" style="padding:15px;
+              text-align:center;">
+            Click Refresh Applications to load requests.
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
       <p>View the registered KMT staff members and their assigned roles.</p>
     </div>
 
