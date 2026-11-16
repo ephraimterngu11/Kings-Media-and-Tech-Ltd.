@@ -1621,6 +1621,203 @@ function cancelEdit() {
 
   loadStaffManagement();
 
+  
+// ==========================================
+// STAFF REGISTRATION APPROVAL FUNCTIONS
+// ==========================================
+
+async function loadRegistrationRequests() {
+    const tbody = document.getElementById('registrationRequestsBody');
+    const message = document.getElementById('registrationRequestMessage');
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="5" style="padding:15px;text-align:center;">
+                Loading applications...
+            </td>
+        </tr>
+    `;
+
+    message.textContent = '';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('staff_registration_requests')
+            .select('id, full_name, email, phone, status, created_at')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="padding:15px;text-align:center;">
+                        No pending registration requests.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        data.forEach(application => {
+            const row = document.createElement('tr');
+
+            const applicantCell = document.createElement('td');
+            applicantCell.textContent = application.full_name || 'Not provided';
+
+            const emailCell = document.createElement('td');
+            emailCell.textContent = application.email || 'Not provided';
+
+            const phoneCell = document.createElement('td');
+            phoneCell.textContent = application.phone || 'Not provided';
+
+            const dateCell = document.createElement('td');
+            dateCell.textContent = new Date(application.created_at)
+                .toLocaleDateString();
+
+            const actionCell = document.createElement('td');
+
+            const approveButton = document.createElement('button');
+            approveButton.textContent = 'Approve';
+            approveButton.style.cssText =
+                'background:#187a35;color:white;padding:7px 12px;border:0;border-radius:5px;cursor:pointer;margin:3px;';
+
+            approveButton.addEventListener('click', () => {
+                reviewRegistration(application.id, 'approve');
+            });
+
+            const rejectButton = document.createElement('button');
+            rejectButton.textContent = 'Reject';
+            rejectButton.style.cssText =
+                'background:#b00020;color:white;padding:7px 12px;border:0;border-radius:5px;cursor:pointer;margin:3px;';
+
+            rejectButton.addEventListener('click', () => {
+                reviewRegistration(application.id, 'reject');
+            });
+
+            actionCell.appendChild(approveButton);
+            actionCell.appendChild(rejectButton);
+
+            row.appendChild(applicantCell);
+            row.appendChild(emailCell);
+            row.appendChild(phoneCell);
+            row.appendChild(dateCell);
+            row.appendChild(actionCell);
+
+            row.style.borderBottom = '1px solid #ddd';
+
+            tbody.appendChild(row);
+        });
+
+        message.style.color = 'green';
+        message.textContent = data.length + ' pending application(s) found.';
+
+    } catch (error) {
+        console.error('Registration loading error:', error);
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="padding:15px;text-align:center;color:red;">
+                    Unable to load applications.
+                </td>
+            </tr>
+        `;
+
+        message.style.color = 'red';
+        message.textContent = error.message;
+    }
+}
+
+
+// ==========================================
+// APPROVE OR REJECT AN APPLICATION
+// ==========================================
+
+async function reviewRegistration(applicantId, decision) {
+
+    let role = '';
+    let post = '';
+    let duty = '';
+
+    if (decision === 'approve') {
+
+        role = prompt('Enter the staff role (e.g. Administrator, Moderator):');
+        if (role === null || !role.trim()) return;
+
+        post = prompt('Enter the staff post (e.g. Admin 1, Moderator 2):');
+        if (post === null || !post.trim()) return;
+
+        duty = prompt('Enter the staff member’s assigned duty:');
+        if (duty === null || !duty.trim()) return;
+
+        if (!confirm('Approve this applicant and create their staff profile?')) {
+            return;
+        }
+
+    } else {
+
+        if (!confirm('Are you sure you want to reject this application?')) {
+            return;
+        }
+    }
+
+    try {
+        const { data: sessionData, error: sessionError } =
+            await supabaseClient.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        const session = sessionData.session;
+
+        if (!session) {
+            throw new Error('Your session has expired. Please log in again.');
+        }
+
+        const response = await fetch(
+            SUPABASE_URL + '/functions/v1/review-staff-registration',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + session.access_token,
+                    'apikey': SUPABASE_KEY
+                },
+                body: JSON.stringify({
+                    applicantId: applicantId,
+                    decision: decision,
+                    role: role.trim(),
+                    post: post.trim(),
+                    duty: duty.trim()
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'The review operation failed.');
+        }
+
+        alert(result.message || 'Application reviewed successfully.');
+
+        await loadRegistrationRequests();
+
+        if (typeof loadStaff === 'function') {
+            await loadStaff();
+        }
+
+    } catch (error) {
+        console.error('Application review error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Load pending applications when the page opens.
+loadRegistrationRequests();
+
 </script>
 
 </body>
