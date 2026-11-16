@@ -1814,6 +1814,16 @@ if (typeof loadStaff === 'function') {
 // Load pending applications when the page opens.
 loadRegistrationRequests();
 
+(async function checkKMTSession() {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    console.log("KMT SESSION CHECK");
+    console.log("Session exists:", !!data.session);
+    console.log("User ID:", data.session?.user?.id || "No user");
+    console.log("Access token exists:", !!data.session?.access_token);
+    console.log("Session error:", error?.message || "None");
+})();
+
 </script>
 
 </body>
