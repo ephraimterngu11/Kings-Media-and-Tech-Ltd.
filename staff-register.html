@@ -1,1 +1,336 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Registration | KMT</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 25px 15px;
+      min-height: 100vh;
+      background: #f2f4f8;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 460px;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+    }
+
+    h2 {
+      text-align: center;
+      color: #071b3a;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 7px;
+      color: #333;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #d66a00;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 23px;
+      background: #071b3a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #d66a00;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #message {
+      margin-top: 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .login-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #071b3a;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .notice {
+      margin-top: 20px;
+      padding: 12px;
+      background: #fff5e8;
+      border-left: 4px solid #d66a00;
+      color: #555;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 25px;
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h2>KMT STAFF REGISTRATION</h2>
+
+    <p class="subtitle">
+      Create your account to apply for access to the
+      King's Media & Tech Ltd. Staff Portal.
+    </p>
+
+    <form id="registrationForm">
+
+      <label for="fullName">Full Name</label>
+      <input
+        type="text"
+        id="fullName"
+        placeholder="Enter your full name"
+        required
+      >
+
+      <label for="email">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter your email address"
+        required
+      >
+
+      <label for="phone">Phone Number</label>
+      <input
+        type="tel"
+        id="phone"
+        placeholder="Enter your phone number"
+        required
+      >
+
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        placeholder="Create a password"
+        minlength="8"
+        required
+      >
+
+      <label for="confirmPassword">Confirm Password</label>
+      <input
+        type="password"
+        id="confirmPassword"
+        placeholder="Confirm your password"
+        minlength="8"
+        required
+      >
+
+      <button type="submit" id="registerButton">
+        Create Account
+      </button>
+
+    </form>
+
+    <p id="message" role="status" aria-live="polite"></p>
+
+    <div class="notice">
+      <strong>Approval Notice:</strong>
+      Creating an account does not guarantee employment
+      or immediate access to the staff portal.
+      All registration requests are subject to verification
+      and approval by the Chief Admin.
+    </div>
+
+    <a href="staff-login.html" class="login-link">
+      Already have an account? Staff Login
+    </a>
+
+    <div class="footer">
+      KING'S MEDIA & TECH LTD.<br>
+      Bridging the Tech Divide
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL =
+      'https://pcvjtkctxfgsynportqr.supabase.co';
+
+    const SUPABASE_KEY =
+      'sb_publishable_noW8Cu33b3m48nbWeNKTxw_u037wFxQ';
+
+    // Separate, non-persistent authentication storage
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          storageKey: 'kmt-registration-auth'
+        }
+      }
+    );
+
+    const form =
+      document.getElementById('registrationForm');
+
+    const message =
+      document.getElementById('message');
+
+    const button =
+      document.getElementById('registerButton');
+
+    form.addEventListener('submit', async function(event) {
+
+      event.preventDefault();
+
+      const fullName =
+        document.getElementById('fullName').value.trim();
+
+      const email =
+        document.getElementById('email').value.trim();
+
+      const phone =
+        document.getElementById('phone').value.trim();
+
+      const password =
+        document.getElementById('password').value;
+
+      const confirmPassword =
+        document.getElementById('confirmPassword').value;
+
+      if (password.length < 8) {
+        message.style.color = '#b00020';
+        message.textContent =
+          'Your password must contain at least 8 characters.';
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        message.style.color = '#b00020';
+        message.textContent =
+          'Your passwords do not match.';
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Submitting Registration...';
+
+      message.style.color = '#071b3a';
+      message.textContent =
+        'Please wait while your account is being created.';
+
+      try {
+
+        const { data, error } =
+          await supabaseClient.auth.signUp({
+
+            email: email,
+            password: password,
+
+            options: {
+              data: {
+                signup_type: 'staff',
+                full_name: fullName,
+                phone: phone
+              }
+            }
+
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        message.style.color = '#187a35';
+
+        if (data.session) {
+          message.textContent =
+            'Your registration request has been received. ' +
+            'Your application is awaiting Chief Admin approval.';
+        } else {
+          message.textContent =
+            'Your account has been created. Please check your email ' +
+            'if email confirmation is required. Your application is ' +
+            'awaiting Chief Admin approval.';
+        }
+
+        form.reset();
+
+        button.textContent = 'Registration Submitted';
+
+      } catch (error) {
+
+        message.style.color = '#b00020';
+
+        message.textContent =
+          error.message || 'Registration failed. Please try again.';
+
+        button.disabled = false;
+        button.textContent = 'Create Account';
+
+      }
+
+    });
+  </script>
+
+</body>
+</html>
+
